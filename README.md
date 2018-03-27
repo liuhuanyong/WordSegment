@@ -46,4 +46,4 @@ Chinese WordSegment based on algorithms including Maxmatch (forward, backward, b
 | MaxBackward | 0.76 | 0.87 | 0.81 | 280.61 |
 | MaxBiWard |0.76 | 0.87 | 0.81 | 443.23|
 | MaxProbNgram | 0.76 | 0.87 | 0.81 | 8.99|
-| MaxBiwardNgram | 0.78 | 0.89 | 0.82 | 280.61|
+| MaxBiwardNgram | 0.74 | 0.86 | 0.80 | 3.96443|
