@@ -30,8 +30,8 @@ Chinese WordSegment based on algorithms including Maxmatch (forward, backward, b
    train_ngram.py:基于人民日报语料29W句子，训练词语出现概率，2-gram条件概率  
               data: 训练语料，放在 ./data/train.txt    
               model: 保存概率模型，训练完成后可直接调用  
-                     wordic_path = './model/word_dict.model' (词语出现概率）   
-                     trans_path = './model/trans_dict.model'（2-gram条件概率）  
+              word_path = './model/word_dict.model' (词语出现概率）   
+              trans_path = './model/trans_dict.model'（2-gram条件概率）  
    max_ngram.py: 最大化概率2-gram分词算法  
    biward_ngram.py: 基于ngram的前向后向最大匹配算法  
    
