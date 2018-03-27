@@ -14,6 +14,35 @@ class MaxProbCut:
         self.trans_dict_count = {}  # 记录词频,2-gram
         self.max_wordlen = 0  #词的最长长度
         self.all_freq = 0  # 所有词的词频总和,1-gram
+        word_count_path = "./model/word_dict.model"
+        word_trans_path = './model/trans_dict.model'
+        self.init(word_count_path, word_trans_path)
+
+    # 加载词典
+    def init(self, word_count_path, word_trans_path):
+        self.word_dict_count = self.load_model(word_count_path)
+        self.all_freq = sum(self.word_dict_count.values())  # 所有词的词频
+        self.max_wordlen = max(len(key) for key in self.word_dict_count.keys())
+        for key in self.word_dict_count:
+            self.word_dict[key] = math.log(self.word_dict_count[key] / self.all_freq)
+        #计算转移概率
+        Trans_dict = self.load_model(word_trans_path)
+        for pre_word, post_info in Trans_dict.items():
+            for post_word, count in post_info.items():
+                word_pair = pre_word + ' ' + post_word
+                self.trans_dict_count[word_pair] = float(count)
+                if pre_word in self.word_dict_count.keys():
+                    self.trans_dict[key] = math.log(count / self.word_dict_count[pre_word])  # 取自然对数，归一化
+                else:
+                    self.trans_dict[key] = self.word_dict[post_word]
+
+    #加载预训练模型
+    def load_model(self, model_path):
+        f = open(model_path, 'r')
+        a = f.read()
+        word_dict = eval(a)
+        f.close()
+        return word_dict
 
     # 估算未出现的词的概率,根据beautiful data里面的方法估算，平滑算法
     def get_unknow_word_prob(self, word):
@@ -67,9 +96,9 @@ class MaxProbCut:
         (best_pre_node, best_prob_sum) = max(pre_node_list, key=lambda d: d[1])
 
         return best_pre_node, best_prob_sum
-        # 最大概率分词
 
-    def cut(self, sentence):
+    #切词主函数
+    def cut_main(self, sentence):
         sentence = sentence.strip()
         # 初始化
         node_state_list = []  # 记录节点的最佳前驱，index就是位置信息
@@ -113,47 +142,17 @@ class MaxProbCut:
 
         return word_list
 
-    def load_model(self, model_path):
-        f = open(model_path, 'r')
-        a = f.read()
-        word_dict = eval(a)
-        f.close()
-        return word_dict
+    #测试接口
+    def cut(self, sentence):
+        return self.cut_main(sentence)
 
-    # 加载词典
-    def init(self, word_count_path, word_trans_path):
-        self.word_dict_count = self.load_model(word_count_path)
-        self.all_freq = sum(self.word_dict_count.values())  # 所有词的词频
-        self.max_wordlen = max(len(key) for key in self.word_dict_count.keys())
-        for key in self.word_dict_count:
-            self.word_dict[key] = math.log(self.word_dict_count[key] / self.all_freq)
-        #计算转移概率
-        Trans_dict = self.load_model(word_trans_path)
-        for pre_word, post_info in Trans_dict.items():
-            for post_word, count in post_info.items():
-                word_pair = pre_word + ' ' + post_word
-                self.trans_dict_count[word_pair] = float(count)
-                if pre_word in self.word_dict_count.keys():
-                    self.trans_dict[key] = math.log(count / self.word_dict_count[pre_word])  # 取自然对数，归一化
-                else:
-                    self.trans_dict[key] = self.word_dict[post_word]
-
-            
-if __name__ == '__main__':
-
+'''
+def test():
     cuter = MaxProbCut()
-    cuter.init("./model/word_dict.model", "./model/trans_dict.model")
     sentence = "今天我不知道你为什么会这个样子"
     seg_sentence = cuter.cut(sentence)
     print("original sentence: " , sentence)
     print("segment result: ", seg_sentence)
 
-    sentence = "习近平在慰问电中表示，惊悉贵国克麦罗沃市发生火灾，造成重大人员伤亡和财产损失。我谨代表中国政府和中国人民，并以我个人的名义，对所有遇难者表示沉痛的哀悼，向受伤者和遇难者家属致以深切的同情和诚挚的慰问。"
-    seg_sentence = cuter.cut(sentence)
-    print("original sentence: " , sentence)
-    print("segment result: ", seg_sentence)
-
-    sentence = "这几天，“中美贸易逆差”的话题再度引发广泛讨论。美东时间3月22日，美总统特朗普签署备忘录，基于美贸易代表办公室公布的对华301调查报告，指令有关部门对华采取限制措施。有观点认为，美国此举的一个重要原因是希望借此缩减中美贸易逆差。"
-    seg_sentence = cuter.cut(sentence)
-    print("original sentence: ", sentence)
-    print("segment result: ", seg_sentence)
+test()
+'''

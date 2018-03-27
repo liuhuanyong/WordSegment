@@ -12,6 +12,9 @@ class BiWardNgram():
         self.trans_dict = {} #每个词后接词的出现个数
         self.word_counts = 0 #语料库中词总数
         self.word_types = 0 #语料库中词种数
+        wordict_path = './model/word_dict.model'
+        transdict_path = './model/trans_dict.model'
+        self.init(wordict_path, transdict_path)
 
     '''初始化模型'''
     def init(self, wordict_path, transdict_path):
@@ -27,86 +30,6 @@ class BiWardNgram():
         word_dict = eval(a)
         f.close()
         return word_dict
-
-    '''分词'''
-    def cut(self, sentence):
-        seg_list1 = self.max_forward(sentence)
-        seg_list2 = self.max_backward(sentence)
-        seg_list = []
-        # differ_list1和differ_list2分别记录两个句子词序列不同的部分，用于消除歧义
-        differ_list1 = []
-        differ_list2 = []
-        # pos1和pos2记录两个句子的当前字的位置，cur1和cur2记录两个句子的第几个词
-        pos1 = pos2 = 0
-        cur1 = cur2 = 0
-        
-        while 1:
-            # 若字符串为空，则不做处理
-            if cur1 == len(seg_list1) and cur2 == len(seg_list2):
-                break
-            # 如果当前位置一样
-            if pos1 == pos2:
-                # 当前位置一样，并且词也一样
-                if len(seg_list1[cur1]) == len(seg_list2[cur2]):
-                    pos1 += len(seg_list1[cur1])
-                    pos2 += len(seg_list2[cur2])
-                    # 说明此时得到两个不同的词序列，根据bigram选择概率大的
-                    # 注意算不同的时候要考虑加上前面一个词和后面一个词，拼接的时候再去掉即可
-                    if len(differ_list1) > 0:
-                        differ_list1.insert(0, seg_list[-1])
-                        differ_list2.insert(0, seg_list[-1])
-                        
-                        if cur1 < len(seg_list1) - 1:
-                            differ_list1.append(seg_list1[cur1])
-                            differ_list2.append(seg_list2[cur2])
-
-                        p1 = self.compute_likelihood(differ_list1)
-                        p2 = self.compute_likelihood(differ_list2)
-
-                        if p1 > p2:
-                            differ_list = differ_list1
-                        else:
-                            differ_list = differ_list2
-                        differ_list.remove(differ_list[0])
-                        if cur1 < len(seg_list1) - 1:
-                            differ_list.remove(seg_list1[cur1])
-                        for words in differ_list:
-                            seg_list.append(words)
-                        differ_list1 = []
-                        differ_list2 = []
-                        
-                    seg_list.append(seg_list1[cur1])
-                    cur1 += 1
-                    cur2 += 1
-
-                # pos1相同，len(seg_list1[cur1])不同，向后滑动，不同的添加到list中
-                elif len(seg_list1[cur1]) > len(seg_list2[cur2]):
-                    differ_list2.append(seg_list2[cur2])
-                    pos2 += len(seg_list2[cur2])
-                    cur2 += 1
-                else:
-                    differ_list1.append(seg_list1[cur1])
-                    pos1 += len(seg_list1[cur1])
-                    cur1 += 1
-            else:
-                # pos1不同，而结束的位置相同，两个同时向后滑动
-                if pos1 + len(seg_list1[cur1]) == pos2 + len(seg_list2[cur2]):
-                    differ_list1.append(seg_list1[cur1])
-                    differ_list2.append(seg_list2[cur2])
-                    pos1 += len(seg_list1[cur1])
-                    pos2 += len(seg_list2[cur2])
-                    cur1 += 1
-                    cur2 += 1
-                elif pos1 + len(seg_list1[cur1]) > pos2 + len(seg_list2[cur2]):
-                    differ_list2.append(seg_list2[cur2])
-                    pos2 += len(seg_list2[cur2])
-                    cur2 += 1
-                else:
-                    differ_list1.append(seg_list1[cur1])
-                    pos1 += len(seg_list1[cur1])
-                    cur1 += 1
-        print(seg_list)
-        return seg_list
 
     #计算基于ngram的句子生成概率
     def compute_likelihood(self, seg_list):
@@ -186,17 +109,96 @@ class BiWardNgram():
                 cutlist.append(sentence[index - 1])
 
             index -= tmp
-
         return cutlist[::-1]
 
+    '''分词'''
+    def cut_main(self, sentence):
+        seg_list1 = self.max_forward(sentence)
+        seg_list2 = self.max_backward(sentence)
+        seg_list = []
+        # differ_list1和differ_list2分别记录两个句子词序列不同的部分，用于消除歧义
+        differ_list1 = []
+        differ_list2 = []
+        # pos1和pos2记录两个句子的当前字的位置，cur1和cur2记录两个句子的第几个词
+        pos1 = pos2 = 0
+        cur1 = cur2 = 0
+        while 1:
+            if cur1 == len(seg_list1) and cur2 == len(seg_list2):
+                break
+            if pos1 == pos2:
 
-if __name__ == '__main__':
-    wordict_path = './model/word_dict.model'
-    transdict_path = './model/trans_dict.model'
+                if len(seg_list1[cur1]) == len(seg_list2[cur2]):
+                    pos1 += len(seg_list1[cur1])
+                    pos2 += len(seg_list2[cur2])
+                    # 说明此时得到两个不同的词序列，根据bigram选择概率大的
+                    # 注意算不同的时候要考虑加上前面一个词和后面一个词，拼接的时候再去掉即可
+                    if len(differ_list1) > 0:
+                        differ_list1.insert(0, seg_list[-1])
+                        differ_list2.insert(0, seg_list[-1])
+
+                        if cur1 < len(seg_list1) - 1:
+                            differ_list1.append(seg_list1[cur1])
+                            differ_list2.append(seg_list2[cur2])
+
+                        p1 = self.compute_likelihood(differ_list1)
+                        p2 = self.compute_likelihood(differ_list2)
+
+                        if p1 > p2:
+                            differ_list = differ_list1
+                        else:
+                            differ_list = differ_list2
+                        differ_list.remove(differ_list[0])
+                        if cur1 < len(seg_list1) - 1:
+                            differ_list.remove(seg_list1[cur1])
+                        for words in differ_list:
+                            seg_list.append(words)
+                        differ_list1 = []
+                        differ_list2 = []
+
+                    seg_list.append(seg_list1[cur1])
+                    cur1 += 1
+                    cur2 += 1
+
+                # pos1相同，len(seg_list1[cur1])不同，向后滑动，不同的添加到list中
+                elif len(seg_list1[cur1]) > len(seg_list2[cur2]):
+                    differ_list2.append(seg_list2[cur2])
+                    pos2 += len(seg_list2[cur2])
+                    cur2 += 1
+                else:
+                    differ_list1.append(seg_list1[cur1])
+                    pos1 += len(seg_list1[cur1])
+                    cur1 += 1
+
+            else:
+                # pos1不同，而结束的位置相同，两个同时向后滑动
+                if pos1 + len(seg_list1[cur1]) == pos2 + len(seg_list2[cur2]):
+                    differ_list1.append(seg_list1[cur1])
+                    differ_list2.append(seg_list2[cur2])
+                    pos1 += len(seg_list1[cur1])
+                    pos2 += len(seg_list2[cur2])
+                    cur1 += 1
+                    cur2 += 1
+                elif pos1 + len(seg_list1[cur1]) > pos2 + len(seg_list2[cur2]):
+                    differ_list2.append(seg_list2[cur2])
+                    pos2 += len(seg_list2[cur2])
+                    cur2 += 1
+                else:
+                    differ_list1.append(seg_list1[cur1])
+                    pos1 += len(seg_list1[cur1])
+                    cur1 += 1
+
+        return seg_list
+
+    '''分词主函数'''
+    def cut(self, sentence):
+        return self.cut_main(sentence)
+
+'''
+def test():
     cuter = BiWardNgram()
-    cuter.init(wordict_path, transdict_path)
     sentence = "习近平在慰问电中表示，惊悉贵国克麦罗沃市发生火灾，造成重大人员伤亡和财产损失。我谨代表中国政府和中国人民，并以我个人的名义，对所有遇难者表示沉痛的哀悼，向受伤者和遇难者家属致以深切的同情和诚挚的慰问。"
-    #sentence = '2018年12月23日，而我们用到的分词算法是基于字符串的分词方法中的正向最大匹配算法和逆向最大匹配算法。然后对两个方向匹配得出的序列结果中不同的部分运用Bi-gram计算得出较大概率的部分。最后拼接得到最佳词序列。'
     seg_sentence = cuter.cut(sentence)
     print("original sentence: " , sentence)
     print("segment result: ", seg_sentence)
+test()
+'''

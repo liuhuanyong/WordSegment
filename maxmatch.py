@@ -5,22 +5,30 @@
 # Date: 18-3-26
 
 class CutWords:
-    def __init__(self, dict_path, sent):
-        self.dict_path = dict_path
-        self.sent = sent
+
+    def __init__(self):
+        dict_path = './dict/dict.txt'
+        self.word_dict = self.load_words(dict_path)
+
+    #加载词典
+    def load_words(self, dict_path):
+        words = list()
+        for line in open(dict_path):
+            words += line.strip().split(' ')
+        return words
 
     #最大向前匹配
-    def max_forward_cut(self, word_dict):
+    def max_forward_cut(self, sent):
         #1.从左向右取待切分汉语句的m个字符作为匹配字段，m为大机器词典中最长词条个数。
         #2.查找大机器词典并进行匹配。若匹配成功，则将这个匹配字段作为一个词切分出来。
         cutlist = []
         index = 0
-        max_wordlen = 7
-        while index < len(self.sent):
+        max_wordlen = 5
+        while index < len(sent):
             matched = False
             for i in range(max_wordlen, 0, -1):
-                cand_word = self.sent[index : index + i]
-                if cand_word in word_dict:
+                cand_word = sent[index : index + i]
+                if cand_word in self.word_dict:
                     cutlist.append(cand_word)
                     matched = True
                     break
@@ -28,42 +36,44 @@ class CutWords:
             #如果没有匹配上，则按字符切分
             if not matched:
                 i = 1
-                cutlist.append(self.sent[index])
+                cutlist.append(sent[index])
             index += i
         return cutlist
     
     #最大向后匹配
-    def max_backward_cut(self, word_dict):
+    def max_backward_cut(self, sent):
         #1.从右向左取待切分汉语句的m个字符作为匹配字段，m为大机器词典中最长词条个数。
         #2.查找大机器词典并进行匹配。若匹配成功，则将这个匹配字段作为一个词切分出来。
         cutlist = []
-        index = len(self.sent)
-        max_wordlen = 7
+        index = len(sent)
+        max_wordlen = 5
         while index > 0 :
             matched = False
             for i in range(max_wordlen, 0, -1):
                 tmp = (i + 1)
-                cand_word = self.sent[index - tmp : index]
+                cand_word = sent[index - tmp : index]
                 #如果匹配上，则将字典中的字符加入到切分字符中
-                if cand_word in word_dict:
+                if cand_word in self.word_dict:
                     cutlist.append(cand_word)
                     matched = True
                     break
             #如果没有匹配上，则按字符切分
             if not matched:
                 tmp = 1
-                cutlist.append(self.sent[index-1])
+                cutlist.append(sent[index-1])
     
             index -= tmp
     
         return cutlist[::-1]
 
     # 双向最大向前匹配
-    def max_biward_cut(self, forward_cutlist, backward_cutlist):
+    def max_biward_cut(self, sent):
         # 双向最大匹配法是将正向最大匹配法得到的分词结果和逆向最大匹配法的到的结果进行比较，从而决定正确的分词方法。
         # 启发式规则：
         # 1.如果正反向分词结果词数不同，则取分词数量较少的那个。
         # 2.如果分词结果词数相同 a.分词结果相同，就说明没有歧义，可返回任意一个。 b.分词结果不同，返回其中单字较少的那个。
+        forward_cutlist = self.max_forward_cut(sent)
+        backward_cutlist = self.max_backward_cut(sent)
         count_forward = len(forward_cutlist)
         count_backward = len(backward_cutlist)
     
@@ -85,38 +95,18 @@ class CutWords:
     
         else:
             return backward_cutlist
-    
-    #加载词典
-    def load_words(self):
-        words = list()
-        for line in open(self.dict_path):
-            words += line.strip().split(' ')
-        return words
-    
-    #分词主函数
-    def cut_main(self):
-        print('loading words........')
-        words = self.load_words()
-        print('{0} words in total'.format(len(words)))
-        max_wordlen = max(len(word) for word in words)
-        forward_cutlist = self.max_forward_cut(words)
-        #['我们', '在野', '生动', '物', '园', '玩']
-        print('forward_cutlist: ', forward_cutlist)
-        backward_cutlist = self.max_backward_cut(words)
-        #['我们', '在', '野生', '动物园', '玩']
-        print('backward_cutlist: ', backward_cutlist)
-        biward_seglit = self.max_biward_cut(forward_cutlist, backward_cutlist)
-        print('biward_seglit: ', biward_seglit)
-        #['我们', '在', '野生', '动物园', '玩']
 
-        return biward_seglit
-
-if __name__=='__main__':
-    dictpath = './dict/dict.txt'
-    sent = '''我们在野生动物园玩'''
-    #sent = '''目前在自然语言处理技术中，中文处理技术比西文处理技术要落后很大一段距离，许多西文的处理方法中文不能直接采用，就是因为中文必需有分词这道工序。中文分词是其他中文信息处理的基础，搜索引擎只是中文分词的一个应用。'''
+#测试
+'''
+def test():
+    sent = '我们在野生动物园玩'
     sent = '北京大学学生前来应聘'
-    sent = '2018年12月23日，而我们用到的分词算法是基于字符串的分词方法中的正向最大匹配算法和逆向最大匹配算法。然后对两个方向匹配得出的序列结果中不同的部分运用Bi-gram计算得出较大概率的部分。最后拼接得到最佳词序列。'
-    cuter = CutWords(dictpath, sent)
-    cuter.cut_main()
+    cuter = CutWords()
+    print(cuter.max_forward_cut(sent))
+    print(cuter.max_backward_cut(sent))
+    print(cuter.max_biward_cut(sent))
+
+test()
+'''
+
 
