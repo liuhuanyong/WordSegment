@@ -66,7 +66,7 @@ if __name__ == "__main__":
     sent = '北京大学学生前来应聘'
     sent = '新华网驻东京记者报道'
     sent = '我们在野生动物园玩'
-
+   # sent = '2018年12月23日，而我们用到的分词算法是基于字符串的分词方法中的正向最大匹配算法和逆向最大匹配算法。然后对两个方向匹配得出的序列结果中不同的部分运用Bi-gram计算得出较大概率的部分。最后拼接得到最佳词序列。'
     trans_path = './model/prob_trans.model'
     emit_path = './model/prob_emit.model'
     start_path = './model/prob_start.model'

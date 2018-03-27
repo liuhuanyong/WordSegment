@@ -8,17 +8,17 @@ class CutWords:
     def __init__(self, dict_path, sent):
         self.dict_path = dict_path
         self.sent = sent
-        
+
     #最大向前匹配
     def max_forward_cut(self, word_dict):
         #1.从左向右取待切分汉语句的m个字符作为匹配字段，m为大机器词典中最长词条个数。
         #2.查找大机器词典并进行匹配。若匹配成功，则将这个匹配字段作为一个词切分出来。
-        window_size = 5
         cutlist = []
         index = 0
+        max_wordlen = 7
         while index < len(self.sent):
             matched = False
-            for i in range(window_size, 0, -1):
+            for i in range(max_wordlen, 0, -1):
                 cand_word = self.sent[index : index + i]
                 if cand_word in word_dict:
                     cutlist.append(cand_word)
@@ -36,12 +36,12 @@ class CutWords:
     def max_backward_cut(self, word_dict):
         #1.从右向左取待切分汉语句的m个字符作为匹配字段，m为大机器词典中最长词条个数。
         #2.查找大机器词典并进行匹配。若匹配成功，则将这个匹配字段作为一个词切分出来。
-        window_size = 5
         cutlist = []
         index = len(self.sent)
+        max_wordlen = 7
         while index > 0 :
             matched = False
-            for i in range(window_size, 0, -1):
+            for i in range(max_wordlen, 0, -1):
                 tmp = (i + 1)
                 cand_word = self.sent[index - tmp : index]
                 #如果匹配上，则将字典中的字符加入到切分字符中
@@ -98,6 +98,7 @@ class CutWords:
         print('loading words........')
         words = self.load_words()
         print('{0} words in total'.format(len(words)))
+        max_wordlen = max(len(word) for word in words)
         forward_cutlist = self.max_forward_cut(words)
         #['我们', '在野', '生动', '物', '园', '玩']
         print('forward_cutlist: ', forward_cutlist)
@@ -114,7 +115,8 @@ if __name__=='__main__':
     dictpath = './dict/dict.txt'
     sent = '''我们在野生动物园玩'''
     #sent = '''目前在自然语言处理技术中，中文处理技术比西文处理技术要落后很大一段距离，许多西文的处理方法中文不能直接采用，就是因为中文必需有分词这道工序。中文分词是其他中文信息处理的基础，搜索引擎只是中文分词的一个应用。'''
-    #sent = '北京大学学生前来应聘'
+    sent = '北京大学学生前来应聘'
+    sent = '2018年12月23日，而我们用到的分词算法是基于字符串的分词方法中的正向最大匹配算法和逆向最大匹配算法。然后对两个方向匹配得出的序列结果中不同的部分运用Bi-gram计算得出较大概率的部分。最后拼接得到最佳词序列。'
     cuter = CutWords(dictpath, sent)
     cuter.cut_main()
 
