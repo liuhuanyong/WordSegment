@@ -35,9 +35,9 @@ Chinese WordSegment based on algorithms including Maxmatch (forward, backward, b
   max_ngram.py: 最大化概率2-gram分词算法  
   biward_ngram.py: 基于ngram的前向后向最大匹配算法  
    
- 4、算法比较
-   1、评测语料：微软评测语料，共3985个句子  
-   2、性能比较  
+4、算法比较  
+1、评测语料：微软评测语料，共3985个句子    
+2、性能比较    
    
 | Algorithm | Precision | Recall | F1-score | Cost-Time |
 | --- | :---: | --- | --- | --- |
